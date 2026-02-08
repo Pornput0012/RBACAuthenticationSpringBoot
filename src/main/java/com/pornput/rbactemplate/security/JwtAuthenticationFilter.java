@@ -1,10 +1,9 @@
 package com.pornput.rbactemplate.security;
 
-import com.pornput.rbactemplate.constants.RbacConstant;
+import com.pornput.rbactemplate.constant.RbacConstant;
 import com.pornput.rbactemplate.jwt.JwtClaims;
 import com.pornput.rbactemplate.jwt.JwtPrincipal;
 import com.pornput.rbactemplate.jwt.JwtService;
-import com.pornput.rbactemplate.model.rbac.CustomUserDetails;
 import com.pornput.rbactemplate.services.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,8 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -48,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            JwtClaims claims = jwtService.verify(token);
+            JwtClaims claims = jwtService.verifyAccessToken(token);
 
             if (Objects.isNull(SecurityContextHolder.getContext().getAuthentication())) {
 

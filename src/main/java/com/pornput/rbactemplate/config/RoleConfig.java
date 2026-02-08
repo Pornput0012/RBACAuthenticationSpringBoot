@@ -9,24 +9,21 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 
 @Configuration
 public class RoleConfig {
-    private final RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
-    private final DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
-
     @Bean
     public RoleHierarchy roleHierarchy() {
-        hierarchy.setHierarchy("""
-                    ROLE_ADMIN > ROLE_USER
-                """);
-        return hierarchy;
+        return RoleHierarchyImpl.fromHierarchy("""
+            ROLE_ADMIN > ROLE_USER
+            ROLE_USER > ROLE_ANONYMOUS
+        """);
     }
 
     @Bean
     public MethodSecurityExpressionHandler methodSecurityExpressionHandler(
             RoleHierarchy roleHierarchy
     ) {
+        DefaultMethodSecurityExpressionHandler handler =
+                new DefaultMethodSecurityExpressionHandler();
         handler.setRoleHierarchy(roleHierarchy);
         return handler;
     }
-
-
 }

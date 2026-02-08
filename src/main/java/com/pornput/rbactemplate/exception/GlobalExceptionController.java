@@ -1,4 +1,4 @@
-package com.pornput.rbactemplate.exceptions;
+package com.pornput.rbactemplate.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,4 +33,17 @@ public class GlobalExceptionController {
                         .build()
         );
     }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ExceptionResponse> handleUnauthorizedException(UnauthorizedException e, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                ExceptionResponse.builder()
+                        .message(e.getMessage())
+                        .error("Unauthorized")
+                        .path(request.getRequestURI())
+                        .status(HttpStatus.UNAUTHORIZED.value())
+                        .build()
+        );
+    }
+
 }

@@ -1,4 +1,4 @@
-package com.pornput.rbactemplate.exceptions;
+package com.pornput.rbactemplate.exception;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

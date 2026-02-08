@@ -7,6 +7,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @Builder
 @RequiredArgsConstructor
-public class LoginResponse {
+public class AccessTokenResponse {
     private final String accessToken;
 }

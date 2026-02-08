@@ -1,4 +1,4 @@
-package com.pornput.rbactemplate.constants;
+package com.pornput.rbactemplate.constant;
 
 public class RbacConstant {
     public static final String ROLE_ADMIN = "ROLE_ADMIN";

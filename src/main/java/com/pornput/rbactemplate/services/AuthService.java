@@ -1,18 +1,22 @@
 package com.pornput.rbactemplate.services;
 
-import com.pornput.rbactemplate.constants.RbacConstant;
-import com.pornput.rbactemplate.exceptions.BadRequestException;
+import com.pornput.rbactemplate.constant.RbacConstant;
+import com.pornput.rbactemplate.exception.BadRequestException;
+import com.pornput.rbactemplate.exception.UnauthorizedException;
+import com.pornput.rbactemplate.jwt.JwtConfig;
 import com.pornput.rbactemplate.jwt.JwtService;
 import com.pornput.rbactemplate.mapper.UserMapper;
 import com.pornput.rbactemplate.model.rbac.CustomUserDetails;
 import com.pornput.rbactemplate.model.rbac.request.LoginRequest;
 import com.pornput.rbactemplate.model.rbac.request.RegisterRequest;
-import com.pornput.rbactemplate.model.rbac.response.LoginResponse;
+import com.pornput.rbactemplate.model.rbac.response.AccessTokenResponse;
 import com.pornput.rbactemplate.model.rbac.response.RegisterResponse;
 import com.pornput.rbactemplate.model.rbac.Role;
 import com.pornput.rbactemplate.model.rbac.User;
 import com.pornput.rbactemplate.repositories.RoleRepository;
 import com.pornput.rbactemplate.repositories.UserRepository;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -25,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -33,9 +38,13 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+
     private final JwtService jwtService;
+    private final JwtConfig jwtConfig;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -60,7 +69,7 @@ public class AuthService {
         return UserMapper.MAPPER.mapRegisterResponse(userRepository.save(user));
     }
 
-    public LoginResponse login(LoginRequest request) {
+    public AccessTokenResponse login(LoginRequest request, HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
@@ -71,7 +80,7 @@ public class AuthService {
 
         log.info("Username: {}", userDetails.getUsername());
 
-        String token = jwtService.generateToken(
+        String accessToken = jwtService.generateAccessToken(
                 userDetails.getUsername(),
                 Map.of(
                         "role", userDetails.getAuthorities().stream()
@@ -80,8 +89,41 @@ public class AuthService {
                 )
         );
 
-        return LoginResponse.builder()
-                .accessToken(token)
+        String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername());
+
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        cookie.setMaxAge(jwtConfig.getExpirationRefresh());
+        // WARN: on production should enable secure
+        // cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+
+        response.addCookie(cookie);
+
+        return AccessTokenResponse.builder()
+                .accessToken(accessToken)
+                .build();
+    }
+
+    public AccessTokenResponse refresh(String refreshToken) {
+        String username = jwtService.verifyRefreshToken(refreshToken);
+        if (Objects.isNull(username)) {
+            throw new UnauthorizedException("Invalid refresh token");
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
+
+        String accessToken = jwtService.generateAccessToken(
+                userDetails.getUsername(),
+                Map.of(
+                        "role", userDetails.getAuthorities().stream()
+                                .findFirst()
+                                .map(GrantedAuthority::getAuthority).orElse(Strings.EMPTY)
+                )
+        );
+
+        return AccessTokenResponse.builder()
+                .accessToken(accessToken)
                 .build();
     }
 }
