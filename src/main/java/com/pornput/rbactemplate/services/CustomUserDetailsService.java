@@ -1,7 +1,7 @@
 package com.pornput.rbactemplate.services;
 
 import com.pornput.rbactemplate.model.rbac.CustomUserDetails;
-import com.pornput.rbactemplate.model.rbac.User;
+import com.pornput.rbactemplate.entities.User;
 import com.pornput.rbactemplate.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

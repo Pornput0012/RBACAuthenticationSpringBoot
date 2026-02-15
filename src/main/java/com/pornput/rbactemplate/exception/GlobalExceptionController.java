@@ -6,6 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+// TODO: Test all Exception
 @RestControllerAdvice
 public class GlobalExceptionController {
     @ExceptionHandler(BadRequestException.class)

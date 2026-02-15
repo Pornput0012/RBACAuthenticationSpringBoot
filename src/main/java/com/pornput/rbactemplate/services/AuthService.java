@@ -11,8 +11,8 @@ import com.pornput.rbactemplate.model.rbac.request.LoginRequest;
 import com.pornput.rbactemplate.model.rbac.request.RegisterRequest;
 import com.pornput.rbactemplate.model.rbac.response.AccessTokenResponse;
 import com.pornput.rbactemplate.model.rbac.response.RegisterResponse;
-import com.pornput.rbactemplate.model.rbac.Role;
-import com.pornput.rbactemplate.model.rbac.User;
+import com.pornput.rbactemplate.entities.Role;
+import com.pornput.rbactemplate.entities.User;
 import com.pornput.rbactemplate.repositories.RoleRepository;
 import com.pornput.rbactemplate.repositories.UserRepository;
 import jakarta.servlet.http.Cookie;
@@ -46,6 +46,8 @@ public class AuthService {
     private final JwtConfig jwtConfig;
     private final CustomUserDetailsService customUserDetailsService;
 
+    private final UserMapper userMapper;
+
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -53,6 +55,7 @@ public class AuthService {
             throw new BadRequestException("Username already exists");
         }
 
+//        TODO: can register with roleType from request
         Role userRole = roleRepository.findByName(RbacConstant.USER)
                 .orElseThrow(() -> new IllegalStateException("Username not found"));
 
@@ -66,7 +69,7 @@ public class AuthService {
                 .enabled(Boolean.TRUE)
                 .build();
 
-        return UserMapper.MAPPER.mapRegisterResponse(userRepository.save(user));
+        return userMapper.mapRegisterResponse(userRepository.save(user));
     }
 
     public AccessTokenResponse login(LoginRequest request, HttpServletResponse response) {

@@ -1,5 +1,6 @@
 package com.pornput.rbactemplate.model.rbac;
 
+import com.pornput.rbactemplate.entities.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import org.springframework.security.core.GrantedAuthority;

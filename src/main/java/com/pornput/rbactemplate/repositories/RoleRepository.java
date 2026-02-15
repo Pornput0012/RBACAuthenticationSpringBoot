@@ -1,6 +1,6 @@
 package com.pornput.rbactemplate.repositories;
 
-import com.pornput.rbactemplate.model.rbac.Role;
+import com.pornput.rbactemplate.entities.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
