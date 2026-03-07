@@ -1,13 +1,10 @@
 package com.pornput.rbactemplate.mapper;
 
 import com.pornput.rbactemplate.model.rbac.response.RegisterResponse;
-import com.pornput.rbactemplate.model.rbac.User;
+import com.pornput.rbactemplate.entities.User;
 import org.mapstruct.Mapper;
-import org.mapstruct.factory.Mappers;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface UserMapper {
-    UserMapper MAPPER = Mappers.getMapper(UserMapper.class);
-
     RegisterResponse mapRegisterResponse(User user);
 }

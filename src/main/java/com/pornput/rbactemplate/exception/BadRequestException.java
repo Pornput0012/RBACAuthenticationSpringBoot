@@ -1,4 +1,4 @@
-package com.pornput.rbactemplate.exceptions;
+package com.pornput.rbactemplate.exception;
 
 public class BadRequestException extends RuntimeException {
     public BadRequestException(String message) {

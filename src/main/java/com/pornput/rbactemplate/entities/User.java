@@ -1,4 +1,4 @@
-package com.pornput.rbactemplate.model.rbac;
+package com.pornput.rbactemplate.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

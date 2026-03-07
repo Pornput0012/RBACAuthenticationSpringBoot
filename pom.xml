@@ -27,7 +27,11 @@
         <url/>
     </scm>
     <properties>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
+
+        <spock-core.version>2.4-M1-groovy-4.0</spock-core.version>
+        <groovy-all.version>4.0.16</groovy-all.version>
+        <gmavenplus-plugin.version>3.0.2</gmavenplus-plugin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -105,6 +109,18 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.spockframework</groupId>
+            <artifactId>spock-spring</artifactId>
+            <version>2.4-groovy-5.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy</artifactId>
+            <version>5.0.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -115,6 +131,16 @@
                 <version>3.13.0</version>
                 <configuration>
                     <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.42</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>0.2.0</version>
+                        </path>
                         <path>
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
@@ -133,19 +159,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.18.42</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
@@ -155,6 +168,42 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>${gmavenplus-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>compileTests</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <targetBytecode>${java.version}</targetBytecode>
+                    <testSources>
+                        <testSource>
+                            <directory>${project.basedir}/src/test/groovy</directory>
+                            <includes>
+                                <include>**/*.groovy</include>
+                            </includes>
+                        </testSource>
+                    </testSources>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.2</version>
+                <configuration>
+                    <testSourceDirectory>src/test/groovy</testSourceDirectory>
+                    <includes>
+                        <include>**/*Specification.groovy</include>
+                        <include>**/*Test.groovy</include>
+                    </includes>
                 </configuration>
             </plugin>
         </plugins>

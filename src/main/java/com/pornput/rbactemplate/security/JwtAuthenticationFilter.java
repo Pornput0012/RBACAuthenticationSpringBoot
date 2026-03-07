@@ -1,21 +1,19 @@
 package com.pornput.rbactemplate.security;
 
-import com.pornput.rbactemplate.constants.RbacConstant;
+import com.pornput.rbactemplate.constant.RbacConstant;
 import com.pornput.rbactemplate.jwt.JwtClaims;
 import com.pornput.rbactemplate.jwt.JwtPrincipal;
 import com.pornput.rbactemplate.jwt.JwtService;
-import com.pornput.rbactemplate.model.rbac.CustomUserDetails;
 import com.pornput.rbactemplate.services.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -24,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -41,14 +40,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            log.trace("No Bearer token found in request to: {}", request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = authHeader.substring(7);
+        log.debug("Processing JWT authentication for request: {}", request.getRequestURI());
 
         try {
-            JwtClaims claims = jwtService.verify(token);
+            JwtClaims claims = jwtService.verifyAccessToken(token);
 
             if (Objects.isNull(SecurityContextHolder.getContext().getAuthentication())) {
 
@@ -71,10 +72,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext()
                         .setAuthentication(authentication);
+
+                log.debug("JWT authentication set for user: {}, role: {}", principal.getUsername(), principal.getRole());
             }
 
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            log.error("JWT authentication failed for request [{}]: {}", request.getRequestURI(), ex.getMessage());
             SecurityContextHolder.clearContext();
         }
 

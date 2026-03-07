@@ -9,6 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Getter
 public class JwtConfig {
     private final String secret;
+    private final String secretRefresh;
     private final Integer expiration;
+    private final Integer expirationRefresh;
     private final String issuer;
 }
