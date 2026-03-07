@@ -28,7 +28,7 @@
   - [รันแบบ Local Development](#-รันแบบ-local-development)
 - [Environment Variables](#-environment-variables)
 - [Flow การทำงาน](#-flow-การทำงาน)
-- [API Endpoints พร้อมตัวอย่าง](#-api-endpoints-พร้อมตัวอย่าง)
+- [API Endpoints](#-api-endpoints)
 - [Flyway — Database Migration](#-flyway--database-migration)
 - [การจัดการ Role](#-การจัดการ-role)
 - [Config ที่ต้องรู้](#-config-ที่ต้องรู้)
@@ -403,7 +403,39 @@ Client → GET /api/users/profile  (Header: Authorization: Bearer <accessToken>)
 
 ---
 
-## 📡 API Endpoints พร้อมตัวอย่าง
+## 📡 API Endpoints
+
+| Method | Endpoint | Auth | Role | Description | Status Codes |
+|---|---|---|---|---|---|
+| `GET` | `/api/public/ping` | ❌ | - | Health check | `200` |
+| `GET` | `/actuator/health` | ❌ | - | Spring Boot health status | `200` |
+| `POST` | `/api/auth/register` | ❌ | - | สมัครสมาชิก (ได้ role USER) | `200`, `400` |
+| `POST` | `/api/auth/login` | ❌ | - | เข้าสู่ระบบ | `200`, `401` |
+| `POST` | `/api/auth/refresh` | Cookie | - | ต่ออายุ Access Token | `200`, `401` |
+| `GET` | `/api/users/profile` | ✅ Bearer | USER+ | ดูข้อมูลผู้ใช้ | `200`, `401`, `403` |
+| `GET` | `/api/users/dashboard` | ✅ Bearer | ADMIN | หน้า Admin dashboard | `200`, `401`, `403` |
+
+> 💡 Protected endpoints ต้องส่ง header `Authorization: Bearer <accessToken>`  
+> Access Token สร้างใหม่ได้ผ่าน `POST /api/auth/refresh` โดยใช้ refreshToken cookie
+
+### Error Response Format
+
+ทุก endpoint ใช้ error response format เดียวกัน:
+
+```json
+{
+  "message": "Error message",
+  "status": 400,
+  "error": "Bad Request",
+  "path": "/api/example",
+  "timestamp": "2026-03-07T12:00:00Z",
+  "validateError": [{ "field": "username", "message": "must not be blank", "code": "NotBlank" }]
+}
+```
+
+> `validateError` จะปรากฏเฉพาะเมื่อ validation ไม่ผ่าน
+
+---
 
 ### 🟢 Public Endpoints (ไม่ต้อง login)
 
@@ -596,20 +628,6 @@ curl -s http://localhost:8080/api/users/dashboard \
 "Admin dashboard"
 ```
 </details>
-
----
-
-### สรุปตาราง Endpoints
-
-| Method | Path | Role | Status Codes |
-|---|---|---|---|
-| `GET` | `/api/public/ping` | ไม่ต้อง | `200` |
-| `GET` | `/actuator/health` | ไม่ต้อง | `200` |
-| `POST` | `/api/auth/register` | ไม่ต้อง | `200`, `400` |
-| `POST` | `/api/auth/login` | ไม่ต้อง | `200`, `401` |
-| `POST` | `/api/auth/refresh` | ไม่ต้อง (ใช้ cookie) | `200`, `401` |
-| `GET` | `/api/users/profile` | `USER+` | `200`, `401`, `403` |
-| `GET` | `/api/users/dashboard` | `ADMIN` | `200`, `401`, `403` |
 
 ---
 
