@@ -50,14 +50,19 @@ public class AuthService {
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
+        log.info("Processing registration request for username: {}", request.getUsername());
+
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            log.error("Username already exists");
+            log.warn("Registration failed - username already exists: {}", request.getUsername());
             throw new BadRequestException("Username already exists");
         }
 
 //        TODO: can register with roleType from request
         Role userRole = roleRepository.findByName(RbacConstant.USER)
-                .orElseThrow(() -> new IllegalStateException("Username not found"));
+                .orElseThrow(() -> {
+                    log.error("Role '{}' not found in database", RbacConstant.USER);
+                    return new IllegalStateException("Username not found");
+                });
 
         String encodedPassword =
                 passwordEncoder.encode(request.getPassword());
@@ -69,14 +74,19 @@ public class AuthService {
                 .enabled(Boolean.TRUE)
                 .build();
 
-        return userMapper.mapRegisterResponse(userRepository.save(user));
+        User savedUser = userRepository.save(user);
+        log.info("User registered successfully - userId: {}, username: {}", savedUser.getId(), savedUser.getUsername());
+
+        return userMapper.mapRegisterResponse(savedUser);
     }
 
     public AccessTokenResponse login(LoginRequest request, HttpServletResponse response) {
+        log.info("Processing login request for username: {}", request.getUsername());
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
-        log.info("Authentication: {}", authentication);
+        log.debug("Authentication successful for user: {}", request.getUsername());
 
         CustomUserDetails userDetails =
                 (CustomUserDetails) authentication.getPrincipal();
@@ -93,6 +103,7 @@ public class AuthService {
         );
 
         String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername());
+        log.debug("Access token and refresh token generated for user: {}", userDetails.getUsername());
 
         Cookie cookie = new Cookie("refreshToken", refreshToken);
         cookie.setMaxAge(jwtConfig.getExpirationRefresh());
@@ -102,6 +113,7 @@ public class AuthService {
         cookie.setPath("/");
 
         response.addCookie(cookie);
+        log.info("Login successful for user: {}", userDetails.getUsername());
 
         return AccessTokenResponse.builder()
                 .accessToken(accessToken)
@@ -109,11 +121,15 @@ public class AuthService {
     }
 
     public AccessTokenResponse refresh(String refreshToken) {
+        log.info("Processing token refresh request");
+
         String username = jwtService.verifyRefreshToken(refreshToken);
         if (Objects.isNull(username)) {
+            log.warn("Token refresh failed - invalid refresh token");
             throw new UnauthorizedException("Invalid refresh token");
         }
 
+        log.debug("Refresh token verified for user: {}", username);
         CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
 
         String accessToken = jwtService.generateAccessToken(
@@ -125,6 +141,7 @@ public class AuthService {
                 )
         );
 
+        log.info("Token refreshed successfully for user: {}", username);
         return AccessTokenResponse.builder()
                 .accessToken(accessToken)
                 .build();
