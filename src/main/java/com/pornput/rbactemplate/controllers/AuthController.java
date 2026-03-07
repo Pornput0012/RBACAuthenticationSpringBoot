@@ -24,18 +24,26 @@ public class AuthController {
     public RegisterResponse register(
             @Valid @RequestBody RegisterRequest request
     ) {
-        log.info("register request");
-        return authService.register(request);
+        log.info("Received register request for username: {}", request.getUsername());
+        RegisterResponse response = authService.register(request);
+        log.info("Register response - userId: {}", response.getUserId());
+        return response;
     }
 
     @PostMapping("/login")
     public ResponseEntity<AccessTokenResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
-        return ResponseEntity.ok(authService.login(request, response));
+        log.info("Received login request for username: {}", request.getUsername());
+        AccessTokenResponse tokenResponse = authService.login(request, response);
+        log.info("Login successful for username: {}", request.getUsername());
+        return ResponseEntity.ok(tokenResponse);
     }
 
 
     @PostMapping("/refresh")
     public ResponseEntity<AccessTokenResponse> refresh(@CookieValue(required = false) String refreshToken) {
-        return ResponseEntity.ok(authService.refresh(refreshToken));
+        log.info("Received token refresh request");
+        AccessTokenResponse tokenResponse = authService.refresh(refreshToken);
+        log.info("Token refresh completed successfully");
+        return ResponseEntity.ok(tokenResponse);
     }
 }

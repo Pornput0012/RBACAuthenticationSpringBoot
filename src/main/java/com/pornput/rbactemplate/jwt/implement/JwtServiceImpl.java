@@ -26,6 +26,7 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String generateAccessToken(String subject, Map<String, Object> claims) {
+        log.debug("Generating access token for subject: {}", subject);
         try {
             Instant now = Instant.now();
             Instant expiry = now.plusSeconds(jwtConfig.getExpiration());
@@ -48,12 +49,14 @@ public class JwtServiceImpl implements JwtService {
             return jwt.serialize();
 
         } catch (Exception e) {
+            log.error("Failed to generate access token for subject: {}", subject, e);
             throw new JwtException("Failed to generate JWT", e);
         }
     }
 
     @Override
     public String generateRefreshToken(String subject) {
+        log.debug("Generating refresh token for subject: {}", subject);
         try {
             Instant now = Instant.now();
             Instant expiry = now.plusSeconds(jwtConfig.getExpirationRefresh());
@@ -74,12 +77,14 @@ public class JwtServiceImpl implements JwtService {
             return jwt.serialize();
 
         } catch (Exception e) {
+            log.error("Failed to generate refresh token for subject: {}", subject, e);
             throw new JwtException("Failed to generate refresh JWT", e);
         }
     }
 
     @Override
     public JwtClaims verifyAccessToken(String token) {
+        log.debug("Verifying access token");
         try {
             SignedJWT jwt = SignedJWT.parse(token);
 
@@ -95,6 +100,7 @@ public class JwtServiceImpl implements JwtService {
                 throw new JwtException("JWT expired");
             }
 
+            log.debug("Access token verified successfully for subject: {}", claims.getSubject());
             return new JwtClaims(
                     claims.getSubject(),
                     claims.getIssueTime().toInstant(),
@@ -112,6 +118,7 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String verifyRefreshToken(String token) {
+        log.debug("Verifying refresh token");
         try {
             SignedJWT jwt = SignedJWT.parse(token);
 
@@ -127,6 +134,7 @@ public class JwtServiceImpl implements JwtService {
                 throw new JwtException("refresh JWT expired");
             }
 
+            log.debug("Refresh token verified successfully for subject: {}", claims.getSubject());
             return claims.getSubject();
 
         } catch (JwtException e) {
