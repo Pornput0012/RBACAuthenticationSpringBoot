@@ -3,11 +3,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-// TODO: Test all Exception
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionController {
@@ -47,6 +47,32 @@ public class GlobalExceptionController {
                         .error("Unauthorized")
                         .path(request.getRequestURI())
                         .status(HttpStatus.UNAUTHORIZED.value())
+                        .build()
+        );
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ExceptionResponse> handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
+        log.warn("Access denied at [{}]: {}", request.getRequestURI(), e.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                ExceptionResponse.builder()
+                        .message("Access denied")
+                        .error("Forbidden")
+                        .path(request.getRequestURI())
+                        .status(HttpStatus.FORBIDDEN.value())
+                        .build()
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ExceptionResponse> handleException(Exception e, HttpServletRequest request) {
+        log.error("Unexpected error at [{}]: {}", request.getRequestURI(), e.getMessage(), e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ExceptionResponse.builder()
+                        .message("Internal server error")
+                        .error("Internal Server Error")
+                        .path(request.getRequestURI())
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .build()
         );
     }

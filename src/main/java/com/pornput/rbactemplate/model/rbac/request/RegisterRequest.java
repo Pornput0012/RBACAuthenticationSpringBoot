@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.jackson.Jacksonized;
 
+import java.util.Objects;
+
 @Getter
 @Builder
 @Jacksonized
@@ -19,10 +21,13 @@ public class RegisterRequest {
     @Size(min = 8, max = 16)
     private final String password;
 
+    @NotBlank
     private final String confirmPassword;
 
-    @AssertTrue
+    private final String role;
+
+    @AssertTrue(message = "password and confirmPassword must match")
     public boolean isValidPassword() {
-        return password.equals(confirmPassword);
+        return Objects.equals(password, confirmPassword);
     }
 }

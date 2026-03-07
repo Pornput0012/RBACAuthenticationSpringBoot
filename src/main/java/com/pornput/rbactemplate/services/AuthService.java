@@ -1,6 +1,6 @@
 package com.pornput.rbactemplate.services;
 
-import com.pornput.rbactemplate.constant.RbacConstant;
+import com.pornput.rbactemplate.constant.RoleType;
 import com.pornput.rbactemplate.exception.BadRequestException;
 import com.pornput.rbactemplate.exception.UnauthorizedException;
 import com.pornput.rbactemplate.jwt.JwtConfig;
@@ -15,11 +15,11 @@ import com.pornput.rbactemplate.entities.Role;
 import com.pornput.rbactemplate.entities.User;
 import com.pornput.rbactemplate.repositories.RoleRepository;
 import com.pornput.rbactemplate.repositories.UserRepository;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -57,11 +57,11 @@ public class AuthService {
             throw new BadRequestException("Username already exists");
         }
 
-//        TODO: can register with roleType from request
-        Role userRole = roleRepository.findByName(RbacConstant.USER)
+        String roleName = RoleType.DEFAULT.name();
+        Role userRole = roleRepository.findByName(roleName)
                 .orElseThrow(() -> {
-                    log.error("Role '{}' not found in database", RbacConstant.USER);
-                    return new IllegalStateException("Username not found");
+                    log.error("Role '{}' not found in database", roleName);
+                    return new IllegalStateException("Role not found: " + roleName);
                 });
 
         String encodedPassword =
@@ -105,14 +105,15 @@ public class AuthService {
         String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername());
         log.debug("Access token and refresh token generated for user: {}", userDetails.getUsername());
 
-        Cookie cookie = new Cookie("refreshToken", refreshToken);
-        cookie.setMaxAge(jwtConfig.getExpirationRefresh());
-        // WARN: on production should enable secure
-        // cookie.setSecure(true);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(jwtConfig.getExpirationRefresh())
+                .build();
 
-        response.addCookie(cookie);
+        response.addHeader("Set-Cookie", cookie.toString());
         log.info("Login successful for user: {}", userDetails.getUsername());
 
         return AccessTokenResponse.builder()
@@ -122,6 +123,11 @@ public class AuthService {
 
     public AccessTokenResponse refresh(String refreshToken) {
         log.info("Processing token refresh request");
+
+        if (Objects.isNull(refreshToken)) {
+            log.warn("Token refresh failed - missing refresh token");
+            throw new UnauthorizedException("Missing refresh token");
+        }
 
         String username = jwtService.verifyRefreshToken(refreshToken);
         if (Objects.isNull(username)) {

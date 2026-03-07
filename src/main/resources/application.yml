@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: RBAC-template
+  jpa:
+    hibernate:
+      ddl-auto: none
+  profiles:
+    active: dev
+
+server:
+  error:
+    include-stacktrace: on_param
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized

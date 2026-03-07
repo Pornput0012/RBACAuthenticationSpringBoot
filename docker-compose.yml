@@ -10,8 +10,43 @@ services:
       MYSQL_PASSWORD: 1234
     ports:
       - "3300:3306"
-    volumes:
-      - ./data:/var/lib/mysql
+    # volumes:
+      # - ./data:/var/lib/mysql
+      # - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootPassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rbac_app
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: template_rbac_database
+      DB_USERNAME: root
+      DB_PASSWORD: rootPassword
+
+      JWT_SECRET: super-secret-key-super-secret-key
+      JWT_SECRET_REFRESH: super-secret-key-super-refresh-key
+      JWT_EXPIRATION: 3600
+      JWT_EXPIRATION_REFRESH: 604800
+      JWT_ISSUER: rbac-template
+      
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000
+    ports:
+      - "8080:8080"
 
 #volumes:
 #  mysql_data:
